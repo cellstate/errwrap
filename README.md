@@ -31,6 +31,18 @@ http://godoc.org/github.com/hashicorp/errwrap
 Below is a very basic example of its usage:
 
 ```go
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/hashicorp/errwrap"
+)
+
+// A custom error message
+const ErrNotExist = "File not found"
+
 // A function that always returns an error, but wraps it, like a real
 // function might.
 func tryOpen() error {
@@ -42,23 +54,49 @@ func tryOpen() error {
 	return nil
 }
 
+// A function that wraps two errors
+func tryOpen2() error {
+	_, err := os.Open("/you/dont/exist")
+	if err != nil {
+		return errwrap.Wrapf(ErrNotExist, errwrap.Wrapf("Doesn't exist: {{err}}", err))
+	}
+
+	return nil
+}
+
 func main() {
+	fmt.Println("Example 1")
 	err := tryOpen()
 
 	// We can use the Contains helpers to check if an error contains
 	// another error. It is safe to do this with a nil error, or with
 	// an error that doesn't even use the errwrap package.
 	if errwrap.Contains(err, ErrNotExist) {
-		// Do something
+		fmt.Println("  contains os.ErrNotExist")
 	}
 	if errwrap.ContainsType(err, new(os.PathError)) {
-		// Do something
+		fmt.Println("  contains type os.PathError")
 	}
 
 	// Or we can use the associated `Get` functions to just extract
 	// a specific error. This would return nil if that specific error doesn't
 	// exist.
 	perr := errwrap.GetType(err, new(os.PathError))
+	fmt.Println("  " + perr.Error())
+
+	fmt.Println("Example 2")
+	err = tryOpen2()
+
+	// Try with two wrapped errors
+	if errwrap.Contains(err, ErrNotExist) {
+		fmt.Println("  contains os.ErrNotExist")
+	}
+	if errwrap.ContainsType(err, new(os.PathError)) {
+		fmt.Println("  contains type os.PathError")
+	}
+
+	perr = errwrap.GetType(err, new(os.PathError))
+	fmt.Println("  " + perr.Error())
 }
 ```
 
