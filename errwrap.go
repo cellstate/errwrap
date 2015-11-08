@@ -6,7 +6,7 @@
 package errwrap
 
 import (
-	"errors"
+	"fmt"
 	"reflect"
 	"strings"
 )
@@ -40,18 +40,19 @@ func Wrap(outer, inner error) error {
 
 // Wrapf wraps an error with a formatting message. This is similar to using
 // `fmt.Errorf` to wrap an error. If you're using `fmt.Errorf` to wrap
-// errors, you should replace it with this.
+// errors, you should replace it with this. You're allowed to use actual
+// formatters like %s, %d
 //
 // format is the format of the error message. The string '{{err}}' will
 // be replaced with the original error message.
-func Wrapf(format string, err error) error {
+func Wrapf(format string, err error, a ...interface{}) error {
 	outerMsg := "<nil>"
 	if err != nil {
 		outerMsg = err.Error()
 	}
 
-	outer := errors.New(strings.Replace(
-		format, "{{err}}", outerMsg, -1))
+	outer := fmt.Errorf(strings.Replace(
+		format, "{{err}}", outerMsg, -1), a...)
 
 	return Wrap(outer, err)
 }
