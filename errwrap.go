@@ -6,6 +6,7 @@
 package errwrap
 
 import (
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -51,8 +52,9 @@ func Wrapf(format string, err error, a ...interface{}) error {
 		outerMsg = err.Error()
 	}
 
-	outer := fmt.Errorf(strings.Replace(
-		format, "{{err}}", outerMsg, -1), a...)
+	msg := fmt.Sprintf(format, a...)
+	outer := errors.New(strings.Replace(
+		msg, "{{err}}", outerMsg, -1))
 
 	return Wrap(outer, err)
 }
